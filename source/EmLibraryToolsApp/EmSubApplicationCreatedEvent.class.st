@@ -20,17 +20,15 @@ EmSubApplicationCreatedEvent >> parent [
 
 { #category : 'Not categorized' }
 EmSubApplicationCreatedEvent >> revert: aBoolean [
-
 	"Applies the neccesary changes in order to rever the event defined by receiver.
 	 If aBoolean is true, also purges the changes from the Library (if applicable)."
 
 	| subApp |
+
 	subApp := Smalltalk classAt: self identifier.
-	
-	EmInterface current
-		deleteSubApplication: subApp from: subApp parent in: 'true'.
-	aBoolean 
-		ifTrue: 
-			[subApp partsRecordClass purge: self identifier at: self timeStamp.
+	EmInterface current deleteSubApplication: subApp from: subApp parent in: 'true'.
+	aBoolean
+		ifTrue: [
+			subApp partsRecordClass purge: self identifier at: self timeStamp.
 			EmLibraryCache current flushEntriesForSubApplicationNamed: self identifier]
 ]

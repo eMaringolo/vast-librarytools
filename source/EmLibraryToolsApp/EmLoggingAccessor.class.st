@@ -35,7 +35,6 @@ EmLoggingAccessor >> applicationAddInitialApplicationFor: appOrSub named: versio
 	
 	| event |
 	super applicationAddInitialApplicationFor: appOrSub named: versionName.
-	((appOrSub isApplication ifTrue: [EmApplicationCreatedEvent] ifFalse: [EmSubApplicationCreatedEvent]) identifier: appOrSub name timeStamp: appOrSub shadows first timeStamp).
 	event := appOrSub isApplication
 		ifTrue: [EmApplicationCreatedEvent identifier: appOrSub name timeStamp: appOrSub shadows first timeStamp]
 		ifFalse: [
@@ -50,7 +49,7 @@ EmLoggingAccessor >> applicationAddInitialClassFor: appOrSub class: aClass [
 		"Create the initial edition for className to appOrSub in the library."
 		
 	super applicationAddInitialClassFor: appOrSub class: aClass.
-	self addEvent: (EmClassCreatedEvent className: aClass name type: #defined in: appOrSub)
+	self notifyEvent: (EmClassCreatedEvent className: aClass name type: #defined in: appOrSub)
 ]
 
 { #category : 'logging' }
@@ -64,23 +63,10 @@ EmLoggingAccessor >> applicationAddPrerequisiteFor: appOrSub prereqName: aName t
 		exit value.
 		^self].
 	
-	self addEvent: ((appOrSub isApplication 
+	self notifyEvent: ((appOrSub isApplication 
 				ifTrue: [EmApplicationPrerequisitesChangedEvent]
 				ifFalse: [EmSubApplicationPrerequisitesChangedEvent])
 					for: appOrSub expression: expr prereqName: aName)
-]
-
-{ #category : 'logging' }
-EmLoggingAccessor >> applicationInsertClassNameFor: appOrSub className: className type: classType ifUnable: exitBlock [
-
-	"Attempt to reserve aClassName in appOrSub.
-	 Exit if appOrSub can not be modified or the current
-	 user is not allowed to add a class."
-
-	appOrSub updateEdition: [:editionRecord |
-		editionRecord insertClassName: className type: classType ifUnable: [^exitBlock value]].
-
-	"self log: (EmClassCreatedEvent identifier: className type: classType in: appOrSub)"
 ]
 
 { #category : 'logging' }
@@ -90,7 +76,7 @@ EmLoggingAccessor >> applicationNewEditionFor: appOrSub ifUnable: exit [
 
 	
 	super applicationNewEditionFor: appOrSub ifUnable: [exit value. ^self].
-	self addEvent: (EmApplicationEditionCreatedEvent identifier: appOrSub timeStamp: appOrSub timeStamp)
+	self notifyEvent: (EmApplicationEditionCreatedEvent identifier: appOrSub timeStamp: appOrSub timeStamp)
 ]
 
 { #category : 'operations' }

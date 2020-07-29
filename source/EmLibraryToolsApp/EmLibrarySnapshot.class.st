@@ -5,7 +5,8 @@ Class {
 		'classes',
 		'log',
 		'subApplications',
-		'applications'
+		'applications',
+		'timeStamp'
 	],
 	#category : 'EmLibraryToolsApp'
 }
@@ -93,15 +94,6 @@ EmLibrarySnapshot >> initialize [
 	classes := Dictionary new
 ]
 
-{ #category : 'loading' }
-EmLibrarySnapshot >> loadApplicationNamed: appName ts: timeStamp [
-
-	| shadowApp |
-	shadowApp := EmShadowApplication named: appName timeStamp: timeStamp.
-	EmImageBuilder loadApplications: (self findAllApplicationsToLoadWith: (Array with: shadowApp))
-	
-]
-
 { #category : 'operations' }
 EmLibrarySnapshot >> loadedAppsAndSubApps [
 	^(applications keys, subApplications keys) collect: [:name | Smalltalk classAt: name ]
@@ -163,6 +155,7 @@ EmLibrarySnapshot >> signalMissingPrerequisiteOf: application [
 { #category : 'operations' }
 EmLibrarySnapshot >> take [
 
+	timeStamp := EmTimeStamp now.
 	System image loadedApplications
 		do: [:app | applications at: app name put: app timeStamp].
 	System image loadedSubApplications		
@@ -175,6 +168,16 @@ EmLibrarySnapshot >> take [
 							[:class | 
 							(classes at: class symbol ifAbsentPut: [Dictionary new]) at: key
 								put: appOrSubapp symbol -> (appOrSubapp timeStampFor: class)]]]
+]
+
+{ #category : 'accessing' }
+EmLibrarySnapshot >> timeStamp [
+	^timeStamp ifNil: [EmTimeStamp undefined]
+]
+
+{ #category : 'accessing' }
+EmLibrarySnapshot >> timeStamp: anObject [
+	timeStamp := anObject
 ]
 
 { #category : 'accessing-private' }

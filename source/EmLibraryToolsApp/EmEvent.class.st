@@ -25,7 +25,7 @@ EmEvent class >> identifier: aSymbol timeStamp: anEmTimeStamp [
 
 ]
 
-{ #category : 'Not categorized' }
+{ #category : 'comparing' }
 EmEvent >> = anEmEvent [
 
 	^self class = anEmEvent class and: 
@@ -33,7 +33,7 @@ EmEvent >> = anEmEvent [
 			and: [self timeStamp = anEmEvent timeStamp]]
 ]
 
-{ #category : 'Not categorized' }
+{ #category : 'operations' }
 EmEvent >> addToMonitor: anEmMonitor [
 
 	
@@ -48,6 +48,12 @@ EmEvent >> basicAddToMonitor: anEmMonitor [
 	
 	anEmMonitor basicAddEvent: self
 	
+]
+
+{ #category : 'accessing' }
+EmEvent >> hash [
+
+	^(self class hash bitXor: self identifier hash) bitXor: self timeStamp
 ]
 
 { #category : 'accessing' }
@@ -87,6 +93,16 @@ EmEvent >> previousTimeStamp [
 { #category : 'accessing' }
 EmEvent >> previousTimeStamp: anObject [
 	previousTimeStamp := anObject
+]
+
+{ #category : 'printing' }
+EmEvent >> printOn: aStream [
+
+	super printOn: aStream.
+	aStream
+		nextPutAll: '(#';
+		nextPutAll: self identifier;
+		nextPutAll: ')'
 ]
 
 { #category : 'operations' }

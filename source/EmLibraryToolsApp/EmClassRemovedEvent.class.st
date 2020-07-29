@@ -9,7 +9,7 @@ EmClassRemovedEvent >> addToMonitor: anEmMonitor [
 
 	(anEmMonitor lastEventForClass: self identifier)
 		ifNil: [
-			self timeStamp isNil
+			(self timeStamp isNil)
 				ifTrue: [
 					(anEmMonitor lastTimeStampOfClass: self identifier in: (self applicationName))
 						ifNotNil: [:ts |
@@ -17,8 +17,7 @@ EmClassRemovedEvent >> addToMonitor: anEmMonitor [
 							anEmMonitor addEvent: self]]
 				ifFalse: [anEmMonitor basicAddEvent: self]]
 		ifNotNil: [:pastEvent |
-			self updateFrom: pastEvent.
-
+			pastEvent class = self class ifTrue: [self updateFrom: pastEvent].
 			anEmMonitor basicAddEvent: self]
 ]
 

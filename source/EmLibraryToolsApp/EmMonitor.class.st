@@ -95,6 +95,17 @@ EmMonitor >> initializeCallbacks [
 		
 ]
 
+{ #category : 'operations' }
+EmMonitor >> installLoggingAccessor [
+	EmLoggingAccessor install
+]
+
+{ #category : 'testing' }
+EmMonitor >> isLogging [
+
+	^logging
+]
+
 { #category : 'lookup' }
 EmMonitor >> lastEventForClass: aSymbol [
 
@@ -173,6 +184,12 @@ EmMonitor >> removeEvent: anEmEvent [
 	self events remove: anEmEvent
 ]
 
+{ #category : 'operations' }
+EmMonitor >> resetEvents [
+	
+	events := OrderedCollection new
+]
+
 { #category : 'lookup' }
 EmMonitor >> reverseDetect: aBlock ifNone: notFoundBlock [
 	
@@ -196,7 +213,19 @@ EmMonitor >> revert: aBoolean [
 	self disableDuring: [
 		self events copy reverseDo: [:event |
 			event revert: aBoolean.
-			self events remove: event]]
+			self events remove: event]].
+	self takeSnapshot
+]
+
+{ #category : 'operations' }
+EmMonitor >> revertLast [
+
+
+	self events isEmpty ifTrue: [^self].
+	self disableDuring: [| event |
+		event := self events last.
+		event revert: false.
+		self events remove: event]
 ]
 
 { #category : 'accessing' }
@@ -209,7 +238,7 @@ EmMonitor >> snapshot [
 EmMonitor >> start [
 	self removeCallbacks.
 	events := OrderedCollection new.
-	snapshot := EmLibrarySnapshot take.
+	self takeSnapshot.
 	self startLogging
 ]
 
@@ -217,7 +246,7 @@ EmMonitor >> start [
   #vaVisibility : 'private' }
 EmMonitor >> startLogging [
 	logging := true.
-	EmLoggingAccessor install.
+	self installLoggingAccessor.
 	self initializeCallbacks
 ]
 
@@ -232,4 +261,9 @@ EmMonitor >> stopLogging [
 	self removeCallbacks.
 	EmLibrary default resetOperationsInterface.
 	logging := false
+]
+
+{ #category : 'operations' }
+EmMonitor >> takeSnapshot [
+	snapshot := EmLibrarySnapshot take
 ]

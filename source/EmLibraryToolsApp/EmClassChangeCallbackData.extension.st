@@ -6,17 +6,30 @@ Extension {
  #vaCategories : ['EM-Internal'] }
 EmClassChangeCallbackData >> asEmEvent [
 
-	| class |
 
-	(self changeType bitAnd: EMCDirectDefinitionChange) = EMCDirectDefinitionChange
-		ifTrue: [ "We ignore this direct changes." ^nil].
+
 	(self changeType bitAnd: EMCAdded) == EMCAdded
-		ifTrue: [
+		ifTrue: [| class |
 			class := (Smalltalk classAt: className).
-			^((EmClassCreatedEvent
-				identifier: className
-				timeStamp: (class timeStampIn: (Smalltalk classAt: applicationName)))
-					applicationName: applicationName)].
+			^(class inheritsFrom: SubApplication)
+				ifTrue: [| appOrSub |
+					appOrSub := (Smalltalk classAt: className).
+					class isApplication
+						ifTrue: [
+							EmApplicationCreatedEvent
+								identifier: className
+								timeStamp: appOrSub timeStamp]
+						ifFalse: [
+							(EmSubApplicationCreatedEvent
+								identifier: className
+								timeStamp: appOrSub timeStamp)
+									parentIdentifier: appOrSub parent name;
+									yourself]]
+				ifFalse: [
+					((EmClassCreatedEvent
+						identifier: className
+						timeStamp: (class timeStampIn: (Smalltalk classAt: applicationName)))
+							applicationName: applicationName)]].
 	(self changeType bitAnd: EMCRemoved) == EMCRemoved
 		ifTrue: [
 			^((EmClassRemovedEvent identifier: self className timeStamp: EmTimeStamp undefined)
