@@ -22,10 +22,13 @@ EmClassRemovedEvent >> addToMonitor: anEmMonitor [
 ]
 
 { #category : 'Not categorized' }
-EmClassRemovedEvent >> revert: aBoolean [
+EmClassRemovedEvent >> revertOperation: aBoolean [
 
-	EmImageBuilder loadClasses:
-		(Array with: (self application classEditionNamed: self identifier at: self timeStamp))
+	^EmPluggableOperation
+		for: self
+		action: [:ev |
+			EmImageBuilder loadClasses:
+				(Array with: (ev application classEditionNamed: ev identifier at: ev timeStamp))]
 ]
 
 { #category : 'Not categorized' }

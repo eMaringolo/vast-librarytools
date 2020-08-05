@@ -23,8 +23,6 @@ EmLoggingAccessorTest >> testLogChanges [
 		create: #XDisposableTestApp
 		with: (Array with: Kernel).
 	
-	self assert: accessor changelog notEmpty.
-	
 	EmInterface current removeApplications: (Array with: app).
 	
 	Application purgeFromLibrary: #XDisposableTestApp.

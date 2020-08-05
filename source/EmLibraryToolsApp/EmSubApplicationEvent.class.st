@@ -27,6 +27,12 @@ EmSubApplicationEvent >> initialize [
 	parentIsApp := false
 ]
 
+{ #category : 'testing' }
+EmSubApplicationEvent >> isApplicationEvent [
+
+	 ^true
+]
+
 { #category : 'accessing' }
 EmSubApplicationEvent >> parentIdentifier [
 	^parentIdentifier

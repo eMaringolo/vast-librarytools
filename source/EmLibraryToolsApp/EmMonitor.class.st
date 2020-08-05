@@ -210,11 +210,31 @@ EmMonitor >> revert: aBoolean [
 	"Reverts the events of receiver.
 	 If aBoolean is true, also purge editions from library (when applicable)."
 
-	self disableDuring: [
-		self events copy reverseDo: [:event |
-			event revert: aBoolean.
-			self events remove: event]].
+	self disableDuring: [self revertEvents: self events purge: aBoolean].
 	self takeSnapshot
+]
+
+{ #category : 'operations',
+  #vaVisibility : 'private' }
+EmMonitor >> revertEvents: eventsToRevert purge: aBoolean [
+
+	| nextOperation eventStream |
+
+	eventStream := eventsToRevert copy reverse readStream.
+	nextOperation := nil.
+	[eventStream atEnd] whileFalse: [| event revertOperation |
+		event := eventStream next.
+		revertOperation := event revertOperation: false.
+		nextOperation isNil
+			ifTrue: [nextOperation := revertOperation]
+			ifFalse: [
+				(revertOperation mustBeMergedWith: nextOperation)
+					ifTrue: [nextOperation := nextOperation mergeWith: revertOperation]
+					ifFalse: [
+						nextOperation execute.
+						nextOperation := revertOperation]].
+		(eventStream atEnd and: [nextOperation notNil]) ifTrue: [nextOperation execute].
+		eventsToRevert remove: event]
 ]
 
 { #category : 'operations' }

@@ -114,13 +114,16 @@ EmEvent >> revert [
 	
 ]
 
+{ #category : 'accessing' }
+EmEvent >> revertOperation [
+
+	^self revertOperation: true
+]
+
 { #category : 'operations' }
-EmEvent >> revert: aBoolean [
+EmEvent >> revertOperation: aBoolean [
 
-	"Applies the neccesary changes in order to rever the event defined by receiver.
-	 If aBoolean is true, also purges the changes from the Library (if applicable)."
-
-	
+	^EmNullOperation for: self
 ]
 
 { #category : 'accessing',

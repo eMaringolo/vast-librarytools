@@ -22,16 +22,18 @@ EmClassCreatedEvent >> addToMonitor: anEmMonitor [
 ]
 
 { #category : 'Not categorized' }
-EmClassCreatedEvent >> revert: aBoolean [
+EmClassCreatedEvent >> revertOperation: aBoolean [
+
 	"Applies the neccesary changes in order to rever the event defined by receiver.
 	 We don't revert if the application is not an edition, because it would require marking the application as scratch."
 
-	| application |
-
-	application := self application.
-	application isNil ifTrue: [^true].
-	(application isEdition or: [application isScratch])
-		ifTrue: [(Smalltalk classAt: self identifier) deleteFrom: application]
+	^EmPluggableOperation for: self
+		action: 
+			[| application |
+			application := self application.
+			application isNil ifTrue: [^true].
+			(application isEdition or: [application isScratch]) 
+				ifTrue: [(Smalltalk classAt: self identifier) deleteFrom: application]]
 ]
 
 { #category : 'Not categorized' }
