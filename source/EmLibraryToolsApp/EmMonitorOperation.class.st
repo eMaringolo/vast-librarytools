@@ -32,13 +32,13 @@ EmMonitorOperation >> event [
 ]
 
 { #category : 'operations' }
-EmMonitorOperation >> execute [
-	self execute: false
+EmMonitorOperation >> executeFor: anEmChangelog [
+	self executeFor: anEmChangelog purge: false
 	
 ]
 
 { #category : 'operations' }
-EmMonitorOperation >> execute: aBoolean [
+EmMonitorOperation >> executeFor: anEmChangelog purge: aBoolean [
 	"Executes the receiver, aBoolean controls whether the Library entry should be purged afterwards."
 ]
 

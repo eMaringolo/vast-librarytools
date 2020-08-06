@@ -6,8 +6,6 @@ Extension {
  #vaCategories : ['EM-Internal'] }
 EmClassChangeCallbackData >> asEmEvent [
 
-
-
 	(self changeType bitAnd: EMCAdded) == EMCAdded
 		ifTrue: [| class |
 			class := (Smalltalk classAt: className).
@@ -32,8 +30,14 @@ EmClassChangeCallbackData >> asEmEvent [
 							applicationName: applicationName)]].
 	(self changeType bitAnd: EMCRemoved) == EMCRemoved
 		ifTrue: [
-			^((EmClassRemovedEvent identifier: self className timeStamp: EmTimeStamp undefined)
-				applicationName: self applicationName)].
+			^(self className == self applicationName)
+				ifTrue: [
+					EmApplicationUnloadedEvent
+						identifier: self className
+						timeStamp: EmTimeStamp undefined]
+				ifFalse: [
+					((EmClassRemovedEvent identifier: self className timeStamp: EmTimeStamp undefined)
+						applicationName: self applicationName)]].
 
 	(self changeType bitAnd: EMCChanged) == EMCChanged
 		ifTrue: [

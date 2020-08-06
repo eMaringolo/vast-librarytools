@@ -1,11 +1,6 @@
 Class {
 	#name : 'EmLoggingAccessor',
 	#superclass : 'EmStandardAccessor',
-	#instVars : [
-		'accessor',
-		'snapshot',
-		'changelog'
-	],
 	#category : 'EmLibraryToolsApp'
 }
 
@@ -76,7 +71,7 @@ EmLoggingAccessor >> applicationNewEditionFor: appOrSub ifUnable: exit [
 
 	
 	super applicationNewEditionFor: appOrSub ifUnable: [exit value. ^self].
-	self notifyEvent: (EmApplicationEditionCreatedEvent identifier: appOrSub timeStamp: appOrSub timeStamp)
+	self notifyEvent: (EmApplicationEditionCreatedEvent identifier: appOrSub identifier timeStamp: appOrSub timeStamp)
 ]
 
 { #category : 'operations' }
@@ -103,11 +98,4 @@ EmLoggingAccessor >> notifyEvent: anEmEvent [
 EmLoggingAccessor >> restore: anEmLibrary [
 
 	anEmLibrary resetOperationsInterface
-]
-
-{ #category : 'initializing',
-  #vaVisibility : 'private' }
-EmLoggingAccessor >> setAccessor: anEmStandardAccessor [
-
-	accessor := anEmStandardAccessor
 ]

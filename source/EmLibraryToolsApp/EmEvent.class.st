@@ -105,15 +105,6 @@ EmEvent >> printOn: aStream [
 		nextPutAll: ')'
 ]
 
-{ #category : 'operations' }
-EmEvent >> revert [
-	"Applies the neccesary changes in order to rever the event defined by receiver.
-	 By default, reverting also purges changes from the Library."
-	
-	self revert: true
-	
-]
-
 { #category : 'accessing' }
 EmEvent >> revertOperation [
 

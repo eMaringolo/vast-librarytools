@@ -14,35 +14,29 @@ EmClassCreatedEvent class >> identifier: aSymbol type: classType in: appOrSub [
 { #category : 'Not categorized' }
 EmClassCreatedEvent >> addToMonitor: anEmMonitor [
 
-	(anEmMonitor lastEventForClass: self identifier type: self class)
+	(anEmMonitor lastEventForClass: self identifier type: self class) 
 		ifNil: [self basicAddToMonitor: anEmMonitor]
-		ifNotNil: [:pastEvent | pastEvent updateFrom: self]
-
-
+		ifNotNil: [:pastEvent | pastEvent updateFrom: self in: anEmMonitor]
 ]
 
 { #category : 'Not categorized' }
 EmClassCreatedEvent >> revertOperation: aBoolean [
-
 	"Applies the neccesary changes in order to rever the event defined by receiver.
 	 We don't revert if the application is not an edition, because it would require marking the application as scratch."
 
-	^EmPluggableOperation for: self
-		action: 
-			[| application |
-			application := self application.
-			application isNil ifTrue: [^true].
-			(application isEdition or: [application isScratch]) 
-				ifTrue: [(Smalltalk classAt: self identifier) deleteFrom: application]]
+	^EmPluggableOperation
+		for: self
+		action: [:ev |
+			ev application ifNotNil: [:application |
+				(application isEdition or: [application isScratch])
+					ifTrue: [(Smalltalk classAt: ev identifier) deleteFrom: application]]]
 ]
 
 { #category : 'Not categorized' }
-EmClassCreatedEvent >> updateFrom: anEmClassCreatedEvent [
+EmClassCreatedEvent >> updateFrom: anEmClassCreatedEvent in: anEmMonitor [
 
-
-	self 
+	self
 		setTimeStamp: anEmClassCreatedEvent timeStamp;
 		applicationName: anEmClassCreatedEvent applicationName.
 	self ownerIsApp: (Smalltalk classAt: self applicationName) isApplication
-		
 ]

@@ -1,34 +1,22 @@
 Class {
 	#name : 'EmApplicationsRemovalOperation',
-	#superclass : 'EmEventsOperation',
+	#superclass : 'EmApplicationsOperation',
 	#category : 'EmLibraryToolsApp'
 }
 
-{ #category : 'accessing',
-  #vaVisibility : 'private' }
+{ #category : 'accessing' }
 EmApplicationsRemovalOperation >> applications [
-	^(self events collect: [:each |  Smalltalk classAt: each identifier ]) asSet
+
+	^(self events collect: [:each | Smalltalk classAt: event identifier]) asSet
 ]
 
 { #category : 'operations' }
-EmApplicationsRemovalOperation >> execute: aBoolean [
+EmApplicationsRemovalOperation >> executeFor: anEmChangelog purge: aBoolean [
 
 	"Executes the removal of receiver."
 
 	EmClassDevelopment imageBuilder removeApplications: self applications.
 	aBoolean ifTrue: [self purge]
-]
-
-{ #category : 'operations' }
-EmApplicationsRemovalOperation >> mergeWith: anotherOperation [
-
-	anotherOperation events do: [:anEvent | self events add: anEvent]
-]
-
-{ #category : 'testing' }
-EmApplicationsRemovalOperation >> mustBeMergedWith: anEmEventOperation [
-
-	^anEmEventOperation class = self class
 ]
 
 { #category : 'operations',
@@ -42,12 +30,4 @@ EmApplicationsRemovalOperation >> purge [
 					[EmLibraryCache current flushEntriesForApplicationNamed: ev identifier]
 				ifFalse: 
 					[EmLibraryCache current flushEntriesForSubApplicationNamed: ev identifier]]
-]
-
-{ #category : 'initializing',
-  #vaVisibility : 'private' }
-EmApplicationsRemovalOperation >> setEvent: anEmEvent [
-
-	super setEvent: anEmEvent.
-	events add: anEmEvent
 ]

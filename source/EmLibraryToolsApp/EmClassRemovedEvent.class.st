@@ -7,17 +7,18 @@ Class {
 { #category : 'Not categorized' }
 EmClassRemovedEvent >> addToMonitor: anEmMonitor [
 
-	(anEmMonitor lastEventForClass: self identifier)
-		ifNil: [
-			(self timeStamp isNil)
-				ifTrue: [
-					(anEmMonitor lastTimeStampOfClass: self identifier in: (self applicationName))
-						ifNotNil: [:ts |
+	(anEmMonitor lastEventForClass: self identifier) ifNil: 
+			[self timeStamp isNil 
+				ifTrue: 
+					[(anEmMonitor lastTimeStampOfClass: self identifier in: self applicationName) 
+						ifNotNil: 
+							[:ts | 
 							self setTimeStamp: ts.
 							anEmMonitor addEvent: self]]
 				ifFalse: [anEmMonitor basicAddEvent: self]]
-		ifNotNil: [:pastEvent |
-			pastEvent class = self class ifTrue: [self updateFrom: pastEvent].
+		ifNotNil: 
+			[:pastEvent | 
+			pastEvent class = self class ifTrue: [self updateFrom: pastEvent in: anEmMonitor].
 			anEmMonitor basicAddEvent: self]
 ]
 
@@ -32,9 +33,8 @@ EmClassRemovedEvent >> revertOperation: aBoolean [
 ]
 
 { #category : 'Not categorized' }
-EmClassRemovedEvent >> updateFrom: anEmClassCreatedEvent [
-
+EmClassRemovedEvent >> updateFrom: anEmClassCreatedEvent in: anEmMonitor [
 
 	self setTimeStamp: anEmClassCreatedEvent timeStamp.
-	self ownerIsApp: anEmClassCreatedEvent ownerIsApp.
+	self ownerIsApp: anEmClassCreatedEvent ownerIsApp
 ]

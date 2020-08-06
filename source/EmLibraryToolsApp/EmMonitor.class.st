@@ -4,7 +4,8 @@ Class {
 	#instVars : [
 		'snapshot',
 		'events',
-		'logging'
+		'logging',
+		'handledEventsClasses'
 	],
 	#classVars : [
 		'Default'
@@ -24,9 +25,8 @@ EmMonitor class >> default [
 { #category : 'logging' }
 EmMonitor >> addEvent: anEmEvent [
 
-	(self events isEmpty or: [anEmEvent ~= self events last]) ifTrue: [
-		anEmEvent addToMonitor: self
-	]
+	(self handledEventsClasses includes: anEmEvent class) ifFalse: [^self].
+	(self events isEmpty or: [anEmEvent ~= self events last]) ifTrue: [anEmEvent addToMonitor: self]
 ]
 
 { #category : 'logging' }
@@ -43,6 +43,11 @@ EmMonitor >> classChanged: aMethod clientData: anObject callData: callData [
 
 	callData asEmEvent ifNotNil: [:event | self addEvent: event ]
 	
+]
+
+{ #category : 'initializing' }
+EmMonitor >> defaultHandledEventsClasses [
+	^EmSubApplicationEvent withAllSubclasses
 ]
 
 { #category : 'operations' }
@@ -68,12 +73,85 @@ EmMonitor >> events [
 	^events
 ]
 
+{ #category : 'prerequisites',
+  #vaVisibility : 'private' }
+EmMonitor >> findAllApplicationsToLoadWith: aCollection [
+
+	"Private - Find all prerequisites of the applications which are not loaded and ask
+	 the user if they should be loaded also. If not answer nil.
+	 
+	 NOTE: This is a modified version of EtBrowser's version, that delegates on receiver to use its own strategy.
+	 "
+
+	| browser required applicationNames stream prereqNames toLoad cursorPosition prereq others |
+	browser := EtBrowser new.
+	required := browser managerInterface 
+				allUnloadedPrerequisitesFor: aCollection.
+	required isEmpty ifTrue: [^aCollection].
+	aCollection size = 1 
+		ifTrue: [applicationNames := aCollection first name]
+		ifFalse: 
+			[stream := WriteStream on: (browser stringClass new: 100).
+			(aCollection asSortedCollection: Class sortBlock) do: 
+					[:app | 
+					stream
+						cr;
+						nextPutAll: '      ' , app name].	"$NON-NLS$"
+			applicationNames := stream contents].
+	stream := WriteStream on: (browser stringClass new: 100).
+	required keys asSortedCollection do: 
+			[:appName | 
+			stream
+				cr;
+				nextPutAll: '      ' , appName].	"$NON-NLS$"
+	prereqNames := stream contents.
+	toLoad := aCollection asOrderedCollection.
+	cursorPosition := System cursorPosition.
+	required associationsDo: 
+			[:assoc | 
+			(toLoad detect: [:app | app symbol = assoc key] ifNone: []) isNil 
+				ifTrue: 
+					[assoc value isEmpty 
+						ifTrue: 
+							[| application |
+							application := assoc key.
+							^self signalMissingPrerequisiteOf: application].	"$NLS$ The prerequisite %1 does not exist in the library."
+					assoc value size = 1 
+						ifTrue: [prereq := assoc value first]
+						ifFalse: 
+							[| application prereqs |
+							application := assoc key.
+							prereqs := assoc value.
+							prereq := self 
+										selectPrerequisiteEditionOf: application
+										in: prereqs
+										using: browser
+										at: cursorPosition].
+					prereq isNil ifTrue: [^nil].
+					others := self findAllApplicationsToLoadWith: (Array with: prereq).
+					others isNil ifTrue: [^nil].
+					toLoad addAll: others]].
+	^toLoad
+]
+
+{ #category : 'configuring' }
+EmMonitor >> handleApplicationEventsOnly [
+
+	handledEventsClasses := EmSubApplicationEvent withAllSubclasses
+]
+
+{ #category : 'accessing' }
+EmMonitor >> handledEventsClasses [
+
+	^handledEventsClasses
+]
+
 { #category : 'initializing',
   #vaVisibility : 'private' }
 EmMonitor >> initialize [
-
 	super initialize.
-	logging := false
+	logging := false.
+	handledEventsClasses := self defaultHandledEventsClasses
 ]
 
 { #category : 'callbacks',
@@ -122,6 +200,22 @@ EmMonitor >> lastEventForClass: aSymbol type: anEmEventClass [
 	self events reverseDo: [:each |
 		(each identifier = aSymbol and: [each class = anEmEventClass]) ifTrue: [^each]].
 	^nil
+]
+
+{ #category : 'lookup' }
+EmMonitor >> lastTimeStampOfApplication: appName [
+
+	^(self lastEventForClass: appName)
+		ifNil: [self snapshot timeStampAt: appName in: appName]
+		ifNotNil: [:event | event timeStamp]
+]
+
+{ #category : 'lookup' }
+EmMonitor >> lastTimeStampOfApplication: appName type: anEmEventClass [
+
+	^(self lastEventForClass: appName type: anEmEventClass)
+		ifNil: [self snapshot timeStampForApplication: appName]
+		ifNotNil: [:event | event timeStamp]
 ]
 
 { #category : 'lookup' }
@@ -190,6 +284,13 @@ EmMonitor >> resetEvents [
 	events := OrderedCollection new
 ]
 
+{ #category : 'operations' }
+EmMonitor >> restart [
+	"Another way to call a start."
+	
+	self start.
+]
+
 { #category : 'lookup' }
 EmMonitor >> reverseDetect: aBlock ifNone: notFoundBlock [
 	
@@ -200,23 +301,23 @@ EmMonitor >> reverseDetect: aBlock ifNone: notFoundBlock [
 ]
 
 { #category : 'operations' }
-EmMonitor >> revert [
+EmMonitor >> rollback [
 
-	self revert: false
+	self rollback: false
 ]
 
 { #category : 'operations' }
-EmMonitor >> revert: aBoolean [
+EmMonitor >> rollback: aBoolean [
 	"Reverts the events of receiver.
 	 If aBoolean is true, also purge editions from library (when applicable)."
 
-	self disableDuring: [self revertEvents: self events purge: aBoolean].
+	self disableDuring: [self rollbackEvents: self events purge: aBoolean].
 	self takeSnapshot
 ]
 
 { #category : 'operations',
   #vaVisibility : 'private' }
-EmMonitor >> revertEvents: eventsToRevert purge: aBoolean [
+EmMonitor >> rollbackEvents: eventsToRevert purge: aBoolean [
 
 	| nextOperation eventStream |
 
@@ -231,21 +332,10 @@ EmMonitor >> revertEvents: eventsToRevert purge: aBoolean [
 				(revertOperation mustBeMergedWith: nextOperation)
 					ifTrue: [nextOperation := nextOperation mergeWith: revertOperation]
 					ifFalse: [
-						nextOperation execute.
+						nextOperation executeFor: self.
 						nextOperation := revertOperation]].
-		(eventStream atEnd and: [nextOperation notNil]) ifTrue: [nextOperation execute].
+		(eventStream atEnd and: [nextOperation notNil]) ifTrue: [nextOperation executeFor: self].
 		eventsToRevert remove: event]
-]
-
-{ #category : 'operations' }
-EmMonitor >> revertLast [
-
-
-	self events isEmpty ifTrue: [^self].
-	self disableDuring: [| event |
-		event := self events last.
-		event revert: false.
-		self events remove: event]
 ]
 
 { #category : 'accessing' }
@@ -256,7 +346,7 @@ EmMonitor >> snapshot [
 
 { #category : 'operations' }
 EmMonitor >> start [
-	self removeCallbacks.
+	self stop.
 	events := OrderedCollection new.
 	self takeSnapshot.
 	self startLogging

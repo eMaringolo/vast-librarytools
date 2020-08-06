@@ -16,9 +16,9 @@ EmPluggableOperation class >> for: anEvent action: aBlock [
 ]
 
 { #category : 'operations' }
-EmPluggableOperation >> execute: aBoolean [
+EmPluggableOperation >> executeFor: anEmChangelog purge: aBoolean [
 
-	^self valuable cull: self event
+	^self valuable cull: self event cull: anEmChangelog cull: aBoolean
 ]
 
 { #category : 'initializing',

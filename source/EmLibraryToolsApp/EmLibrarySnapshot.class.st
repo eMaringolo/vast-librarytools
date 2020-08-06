@@ -185,3 +185,9 @@ EmLibrarySnapshot >> timeStampAt: className in: appName [
 
 	^((classes at: className ifAbsentPut: [Dictionary new]) at: #defined ifAbsent: [appName -> EmTimeStamp undefined]) value
 ]
+
+{ #category : 'accessing' }
+EmLibrarySnapshot >> timeStampForApplication: aSymbol [
+
+	^applications at: aSymbol ifAbsent: [EmTimeStamp undefined]
+]
