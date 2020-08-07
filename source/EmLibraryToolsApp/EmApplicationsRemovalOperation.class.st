@@ -7,7 +7,7 @@ Class {
 { #category : 'accessing' }
 EmApplicationsRemovalOperation >> applications [
 
-	^(self events collect: [:each | Smalltalk classAt: event identifier]) asSet
+	^(self events collect: [:each | Smalltalk classAt: each identifier]) asSet
 ]
 
 { #category : 'operations' }

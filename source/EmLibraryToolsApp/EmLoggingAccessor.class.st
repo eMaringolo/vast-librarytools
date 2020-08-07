@@ -71,7 +71,7 @@ EmLoggingAccessor >> applicationNewEditionFor: appOrSub ifUnable: exit [
 
 	
 	super applicationNewEditionFor: appOrSub ifUnable: [exit value. ^self].
-	self notifyEvent: (EmApplicationEditionCreatedEvent identifier: appOrSub identifier timeStamp: appOrSub timeStamp)
+	self notifyEvent: (EmApplicationEditionCreatedEvent identifier: appOrSub name timeStamp: appOrSub timeStamp)
 ]
 
 { #category : 'operations' }
